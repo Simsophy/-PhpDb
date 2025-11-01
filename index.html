@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio | Sophy</title>
+
+   
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            background-color:blanchedalmond;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #222;
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .logo {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        nav a {
+            color: #bbb;
+            text-decoration: none;
+            margin: 0 15px;
+            transition: 0.3s;
+        }
+
+        nav a:hover,
+        nav a.active {
+            color: #fff;
+        }
+
+        section {
+            padding: 100px 50px;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .home {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            min-height: 100vh;
+            gap: 50px;
+        }
+
+        .home-img img {
+    width: 200px;
+    height: auto;             /* Keeps correct aspect ratio */
+    border: 1px solid #333;
+    border-radius: 10px;      /* Rounded corners */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); /* Soft shadow */
+    display: block;
+    margin: 0 auto;           /* Centers image horizontally */
+}
+
+        .home-content {
+            max-width: 500px;
+        }
+
+        .home-content h1 {
+            font-size: 2.5rem;
+        }
+
+        .home-content h1 span {
+            color: #007bff;
+        }
+
+        .home-content .typing-text span {
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .social-icons a {
+            font-size: 20px;
+            color: #333;
+            transition: 0.3s;
+        }
+
+        .social-icons a:hover {
+            color: #007bff;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: #fff !important;
+            padding: 8px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        hr {
+            margin: 50px 0;
+            border: 1px solid #ccc;
+        }
+
+       
+        .content-section {
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 50px;
+        }
+
+        .content-section h2 {
+            color: dodgerblue;
+            margin-bottom: 10px;
+        }
+
+        .content-section p {
+            margin-top: 10px;
+        }
+
+        .content-section ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        
+       
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #222;
+            color: #fff;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- HEADER -->
+    <header>
+        <a href="#home" class="logo">Portfolio</a>
+        <nav>
+            <a href="#home" class="active">Home</a>
+            <a href="#skills">Skills</a>
+            <a href="#education">Education</a>
+            <a href="#experience">Experience</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
+
+    <!-- HOME -->
+    <section id="home" class="home">
+        <div class="home-img">
+            <img src="9.png" alt="Sophy Profile Photo">
+        </div>
+        <div class="home-content">
+            <h1>Hello, <span>I'm Sophy</span></h1>
+            <h3 class="typing-text">I am a <span></span> Web Developer</h3>
+            <p>I provide web development services to help your business grow online. Which service are you interested in?</p>
+            
+            <div class="social-icons">
+                <a href="#"><i class="fa-brands fa-linkedin"></i></a>
+                <a href="#"><i class="fa-brands fa-github"></i></a>
+                <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+                <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" class="btn">Hire Me</a>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    
+    <section id="skills" class="content-section">
+        <h2>Skills</h2>
+        <p><strong>Technical:</strong> HTML, CSS, JavaScript, Responsive Web Design, Figma and Adobe Photoshop to Design,Create Resume</p>
+        <p><strong>Other:</strong> Accessibility, Technical Writing, Presentation</p>
+    </section>
+
+    <!-- EDUCATION -->
+    <section id="education" class="content-section">
+        <h2>Education</h2>
+        <p><b>Royal University Of Phnom Penh, Phnom Penh — Bachelor Degree</b> (2024-Present)</p>
+        <p><b>Kampongspue High School, Kampong Spue</b> (2022-2024)</p>
+        <p><b>Chhay Chob Secondary School, Kampong Spue</b> (2019-2022)</p>
+        <p><b>Sunrise Institute, Phnom Penh</b> (September 2024-Present)</p>
+
+        <h3>Courses I Took:</h3>
+        <ul>
+            <li>Object Oriented Programming</li>
+            <li>Data Structures and Algorithms</li>
+            <li>Web Engineering</li>
+            <li>Artificial Intelligence</li>
+            <li>Human Computer Interaction</li>
+            <li>Computer Graphics</li>
+            <li>Database Management Systems</li>
+            <li>Distributed Database Systems</li>
+            <li>Discrete Mathematics</li>
+        </ul>
+    </section>
+
+   
+    <section id="experience" class="content-section">
+        <h2>Experience</h2>
+
+        <p><strong>2025: Stock Management System (Laravel, PHP, MySQL, Bootstrap)</strong></p>
+        <ul>
+            <li>Developed a web-based application to manage products, sales, and users.</li>
+            <li>Implemented authentication and role-based permissions using Laravel.</li>
+            <li>Designed responsive UI with Blade templates and Bootstrap.</li>
+            <li>Integrated MySQL database for efficient data storage and retrieval.</li>
+        </ul>
+
+        <p><strong>December 2024: Online Bookstore Website (HTML, CSS)</strong></p>
+        <ul>
+            <li>Designed and developed a responsive bookstore website using HTML & CSS.</li>
+            <li>Created structured layouts for homepage, product listings, and contact sections.</li>
+            <li>Applied modern styling (flexbox, grid, hover effects) for better user experience.</li>
+        </ul>
+
+        <p><strong>February 2025: Course Website (HTML, CSS, JavaScript)</strong></p>
+        <ul>
+            <li>Developed an interactive learning platform prototype with JavaScript.</li>
+            <li>Implemented navigation, preview buttons, and course cards with dynamic effects.</li>
+            <li>Focused on responsive design and user-friendly layouts.</li>
+        </ul>
+    </section>
+
+  
+    <section id="contact" class="content-section">
+        <h2>Contact</h2>
+        <p>Email: <a href="simsophy168lucky@gmail.com">simsophy168lucky@gmail.com</a></p>
+        <p>Location: Phnom Penh, Cambodia</p>
+    </section>
+
+    
+    <footer>
+        © 2025 Sophy. All rights reserved.
+    </footer>
+
+   
+    
+</body>
+</html>
