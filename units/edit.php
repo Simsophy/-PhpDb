@@ -1,94 +1,117 @@
 <?php 
-// Ensure session is started, typically in header.php or config.php
-// If not started in an included file, uncomment the line below:
-// if (session_status() == PHP_SESSION_NONE) { session_start(); }
-
+// Standard includes
 include('../config.php');
 include('../function.php');
 
-// CRITICAL SECURITY FIX 1: Validate and sanitize ID from GET to prevent SQL Injection
-// Use intval() to ensure the ID is treated only as a number.
+// Security: Ensure session is active for alerts
+if (session_status() == PHP_SESSION_NONE) { session_start(); }
+
+// Validate and sanitize ID from GET
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-// Redirect if ID is invalid
 if ($id <= 0) {
     $_SESSION['error'] = "Invalid unit ID provided.";
     header('Location: index.php');
     exit;
 }
 
-// -----------------------------------------------------------
 // 1. HANDLE FORM SUBMISSION (UPDATE)
-// -----------------------------------------------------------
 if(isset($_POST['btn'])){
     global $conn;
-    
-    // CRITICAL SECURITY FIX 2: Sanitize input to prevent SQL Injection
     $name = mysqli_real_escape_string($conn, $_POST['name']);
-    
-    // BUG FIX 1: Use sanitized $id_int and $name in the query
     $sql = "UPDATE units SET name = '$name' WHERE id = $id";
 
-    $x = non_query($sql);
-    
-    if ($x) {
-        // BUG FIX 2: Redirect on success to prevent form resubmission and display the message on index.php
-        $_SESSION['success'] = "Unit edited successfully!";
+    if (non_query($sql)) {
+        $_SESSION['success'] = "Unit updated successfully!";
         header('Location: index.php');
         exit;
     } else {
-        // FIX: Provide detailed error message for debugging
         $_SESSION['error'] = "Failed to edit unit! MySQL Error: " . mysqli_error($conn);
     }
 }
 
-// -----------------------------------------------------------
-// 2. READ DATA FOR FORM (always executed)
-// -----------------------------------------------------------
-// Initial data load for the form field
+// 2. READ DATA FOR FORM
 $sql1 = "SELECT * FROM units WHERE id = $id";
 $row = scalar_query($sql1);
 
-// Logic Check: If no row is found, redirect to prevent errors
 if (!$row) {
     $_SESSION['error'] = "Unit with ID $id not found.";
     header('Location: index.php');
     exit;
 }
 
-// Set $name for the input value attribute
-// SECURITY FIX 3: Use htmlspecialchars() when outputting data back into the form
 $current_name = htmlspecialchars($row['name'] ?? '');
+$title = "Edit Unit";
+include('../includes/header.php'); 
 ?>
 
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            
+            <div class="mb-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <h3 class="fw-bold text-dark m-0">Edit Unit</h3>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb small m-0">
+                            <li class="breadcrumb-item"><a href="../dashboard.php" class="text-decoration-none">Home</a></li>
+                            <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Units</a></li>
+                            <li class="breadcrumb-item active">Edit</li>
+                        </ol>
+                    </nav>
+                </div>
+                <a href="index.php" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
+            </div>
 
-<?php $title = "Edit Units"; ?>
-<?php include('../includes/header.php'); ?>
+            <?php alert_error(); alert_success(); ?>
 
-    <div class="container">
-        <?php alert_error(); alert_success(); ?>
-        
-        <h3>Edit Units</h3>
-        <p>
-            <a href="index.php" class="btn btn-success btn-sm">Back</a>
-        </p>    
-        <form action="" method="post">
-            <div class="row">
-                <div class="col-sm-6">
-                    
-                    <div class="form-group">
-                        <label for="name">Name
-                            <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" id="name" name="name" class="form-control" required autofocus value="<?= $current_name; ?>">
-                    </div>
-                    
-                    <div class="form-group mt-3">
-                        <button class="btn btn-primary btn-sm" name="btn" >Save</button>
-                        <a href="index.php" class="btn btn-danger btn-sm" >Cancel</a>
-                    </div>
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <form action="" method="post">
+                        <div class="mb-4">
+                            <label for="name" class="form-label small fw-bold text-muted text-uppercase">
+                                Unit Name <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-ruler-combined text-primary"></i>
+                                </span>
+                                <input type="text" id="name" name="name" 
+                                       class="form-control border-start-0 ps-0 shadow-none" 
+                                       placeholder="e.g. Kilograms, Box, Liters"
+                                       required autofocus 
+                                       value="<?= $current_name; ?>">
+                            </div>
+                            <div class="form-text mt-2 small">
+                                Ensure the unit name is unique and clear (e.g., "kg" or "Pieces").
+                            </div>
+                        </div>
+
+                        <hr class="my-4 opacity-25">
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="btn" class="btn btn-primary px-4 rounded-3 w-100 shadow-sm">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                            <a href="index.php" class="btn btn-light px-4 rounded-3 w-100 border text-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </form>
+            
+            <div class="mt-4 text-center">
+                <p class="text-muted small">
+                    <i class="fas fa-info-circle me-1"></i> 
+                    Updating this unit will affect all products assigned to it.
+                </p>
+            </div>
+
+        </div>
     </div>
+</div>
+
 <?php include('../includes/footer.php'); ?>

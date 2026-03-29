@@ -1,73 +1,91 @@
-<?php
+<?php 
     include('../config.php');
     include('../function.php');
-    $success = false;
-    $error = false;
+    session_start();
 
     if(isset($_POST['btn'])){
-        $name = $_POST['name'];
-        $description = $_POST['description'];
-        $sql = "insert into categories (name, description) value('$name', '$description')";
+        global $conn;
+        
+        // SECURITY FIX: Sanitize input to prevent SQL Injection
+        $name = mysqli_real_escape_string($conn, $_POST['name']);
+        $description = mysqli_real_escape_string($conn, $_POST['description']);
+        
+        $sql = "INSERT INTO categories (name, description) VALUES ('$name', '$description')";
 
-        $x = non_query($sql);
-        if($x) {
-            $success = true;
+        if(non_query($sql)) {
+            $_SESSION['success'] = "Category created successfully!";
             header('Location: index.php');
-        }
-        else {
-            $error = true;
+            exit;
+        } else {
+            $_SESSION['error'] = "Failed to create category. Please try again.";
         }
     }
+
+    $title = "Create Category";
+    include('../includes/header.php'); 
 ?>
-<?php $title = "Create"; ?>
-<?php include('../includes/header.php'); ?>
 
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold text-dark m-0">New Category</h3>
+                    <p class="text-muted small mb-0">Add a new grouping for your products.</p>
+                </div>
+                <a href="index.php" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
 
-<div class="container">
-    
-    
-    <?php alert_success(); ?>
-    <?php alert_error(); ?> 
-    <div class="container">
-        <h3>Create Categories</h3>
-        <p>
-            <a href="index.php" class="btn btn-success btn-sm">Back</a>
-        </p>
-        <form method = "post">
-            <div class="row">
-                <div class="col-sm-6">
-                    <?php if($success): ?>
-                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                            <strong>Information</strong> Data has been saved successfully.
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <?php alert_success(); alert_error(); ?>
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <form method="post">
+                        
+                        <div class="mb-4">
+                            <label for="name" class="form-label small fw-bold text-muted text-uppercase">
+                                Category Name <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-primary">
+                                    <i class="bi bi-tag"></i>
+                                </span>
+                                <input type="text" name="name" id="name" 
+                                       class="form-control border-start-0 ps-0 shadow-none" 
+                                       placeholder="e.g. Electronics, Groceries" 
+                                       required autofocus>
+                            </div>
                         </div>
-                    <?php endif; ?>
 
-                    <?php if($error): ?>
-                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                            <strong>Information</strong> Fail to save data, please check again!
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <div class="mb-4">
+                            <label for="description" class="form-label small fw-bold text-muted text-uppercase">
+                                Description
+                            </label>
+                            <textarea name="description" id="description" 
+                                      class="form-control bg-light shadow-none" 
+                                      rows="4" 
+                                      placeholder="Briefly describe what goes in this category..."></textarea>
+                        </div>   
+
+                        <hr class="my-4 opacity-25">
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="btn" class="btn btn-primary px-4 rounded-3 w-100 shadow-sm">
+                                <i class="bi bi-plus-circle me-2"></i>Create Category
+                            </button>
+                            <a href="index.php" class="btn btn-light px-4 rounded-3 w-100 border text-secondary">
+                                Cancel
+                            </a>
                         </div>
-                    <?php endif; ?>
-
-                    <div class="form-group">
-                        <label for="name">Name
-                            <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" name="name" id="name" class= "form-control" require autofocus>
-                    </div>
-
-                    <div class="form-group mt-2">
-                        <label for="text">Description</label>
-                        <textarea name="description" id="description" class = "form-control" rows = "4" ></textarea>
-                    </div>   
-
-                    <div class="form-group mt-3">
-                        <button class = "btn btn-primary btn-sm" name = "btn" >Save</button>
-                        <a href="index.php" class="btn btn-danger btn-sm">Cancel</a>
-                    </div>
+                    </form>
                 </div>
             </div>
-        </form>
+            
+        </div>
     </div>
+</div>
+
 <?php include('../includes/footer.php'); ?>

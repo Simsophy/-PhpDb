@@ -7,7 +7,7 @@ include('../includes/header.php');
 // query must return `title` from table
 $rows = query("SELECT *, CONCAT(first_name, ' ', last_name) AS name FROM employees");
 ?>
-
+<?phpinclude('../includes/header.php'); ?>
 <body>
     <div class="container">
         <?php alert_success(); ?>

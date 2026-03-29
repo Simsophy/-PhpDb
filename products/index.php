@@ -1,129 +1,143 @@
 <?php
-    // Include config and function files
-    include('../config.php');
-    include('../function.php');
+require_once('../config.php');
+require_once('../function.php');
 
-    // Ensure the database connection ($conn) is available in function.php via global.
-    // If not, you may need to add 'global $conn;' at the top of this script.
+// 1. ទាញយកអត្រាប្តូរប្រាក់បច្ចុប្បន្ន (Current Exchange Rate)
+$rate_data = scalar_query("SELECT khr FROM exchanges WHERE active = 1 LIMIT 1");
+$current_rate = $rate_data ? $rate_data['khr'] : 4000; // តម្លៃ default បើរកមិនឃើញ
 
-    // 1. Get filter variables safely
-    $cid = $_GET['cid'] ?? 'all'; // PHP Null Coalescing Operator for safety
-    $q = $_GET['q'] ?? '';
-    
-    // Use mysqli_real_escape_string to prevent SQL Injection
-    // The $conn variable MUST be available (either globally or passed).
-    $safe_cid = ($cid !== 'all') ? mysqli_real_escape_string($conn, $cid) : 'all';
+// 2. Data Logic & Sanitization
+$cid = $_GET['cid'] ?? 'all'; 
+$q = $_GET['q'] ?? '';
+
+$cats = query("SELECT * FROM categories"); 
+
+$sql = "SELECT p.*, c.name as catname, u.name as unit 
+        FROM products p
+        INNER JOIN categories c ON p.category_id = c.id
+        INNER JOIN units u ON p.unit_id = u.id 
+        WHERE p.active=1";
+
+if ($cid !== 'all') { 
+    $safe_cid = mysqli_real_escape_string($conn, $cid);
+    $sql .= " AND p.category_id = '{$safe_cid}'"; 
+}
+
+if (!empty($q)) { 
     $safe_q = mysqli_real_escape_string($conn, $q);
+    $sql .= " AND (p.code LIKE '%{$safe_q}%' OR p.name LIKE '%{$safe_q}%')"; 
+}
 
-    // 2. Query categories (Fix for 'active' column and database function return type)
-    // Assuming you REMOVED the 'active=1' from this query, 
-    // or you ADDED the 'active' column to the 'categories' table.
-    // We also use a standard PHP array loop in the HTML.
-    $cats = query("select * from categories"); 
-    
-    // 3. Build the main product SQL query
-    $sql = "select products.*, categories.name as catname, units.name as unit from products
-    inner join categories on products.category_id = categories.id
-    join units on products.unit_id = units.id 
-    where products.active=1"; // This WHERE clause still assumes 'active' column in 'products' table
+$products = query($sql); 
+$title = "Inventory Management";
 
-    $con = ''; // Condition string
-    if ($safe_cid !== 'all') {
-        // Condition 1: Filter by Category ID (safely using $safe_cid)
-        $con .= " and products.category_id = '{$safe_cid}'";
-    }
-
-    if (!empty($safe_q)) {
-        // Condition 2: Filter by Keyword (safely using $safe_q)
-        $con .= " and (products.code LIKE '%{$safe_q}%' OR products.name LIKE '%{$safe_q}%')";
-    }
-    
-    $sql .= $con;
-
-    // 4. Execute the final product query
-    $result_array = query($sql); // Renamed to clarify it returns an ARRAY
-    
-    $i = 1;
+include('../includes/header.php'); 
 ?>
-<?php $title = "Products"; ?>
-<?php include('../includes/header.php'); ?>
-<body>
-    <div class="container">
-       
-    <?php alert_success(); ?>
-    <?php alert_error(); ?>
-        <h5> Products List</h5>
-        <div class="row-mb-2">
-            <div class="col-sm-3">
-               <p>
-                    <a href="create.php" class="btn btn-primary btn-sm">Create</a>
-                    <a href="../index.php" class="btn btn-success btn-sm">Back</a>
-                </p> 
-            </div>
-            <div class="col-sm-9">
-                <form method="GET"> 
-                    Category:
-                    <select name="cid" id="cid">
-                        <option value="all">All</option>
-                        
-                        <?php foreach($cats as $row): ?>
-                            <option value="<?=htmlspecialchars($row['id']);?>" 
-                                <?=$row['id'] == $cid ? 'selected' : '';?>>
-                                <?=htmlspecialchars($row['name']);?>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold m-0"><i class="fas fa-boxes text-primary me-2"></i> តុល្យភាពស្តុក (Inventory)</h4>
+            <small class="text-muted">អត្រាប្តូរប្រាក់បច្ចុប្បន្ន: <strong>$1 = <?= number_format($current_rate) ?> ៛</strong></small>
+        </div>
+        <a href="create.php" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+            <i class="fas fa-plus me-1"></i> ថែមទំនិញថ្មី
+        </a>
+    </div>
+
+    <?php alert_success(); alert_error(); ?>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3">
+            <form method="GET" class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <select name="cid" class="form-select form-select-sm border-0 bg-light shadow-none">
+                        <option value="all">គ្រប់ប្រភេទទំនិញ</option>
+                        <?php foreach($cats as $cat): ?>
+                            <option value="<?= $cat['id'] ?>" <?= ($cid == $cat['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cat['name']) ?>
                             </option>
                         <?php endforeach; ?>
-                        
                     </select>
-                    keyword:
-                    <input type="text" name="q" value="<?=htmlspecialchars($q);?>">
-                    <button name="btn">Search</button>
-                </form>
-            </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text border-0 bg-light"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" name="q" class="form-control border-0 bg-light shadow-none" 
+                               placeholder="ស្វែងរកតាមលេខកូដ ឬឈ្មោះទំនិញ..." value="<?= htmlspecialchars($q) ?>">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-dark btn-sm w-100 rounded-3">ស្វែងរក</button>
+                </div>
+            </form>
         </div>
-        
-        <?php 
-            alert_error();
-            alert_success();
-        ?>
-        <table class = "table table-bordered table-sm">
-            <thead>
-                <tr>
-                    <td>No.</td> <td>Code</td>
-                    <td>Name</td>
-                    <td>Price</td>
-                    <td>Categories</td>
-                    <td>Units</td>
-                    <td>Low Stock</td>
-                    <td>onhand</td>
-                    <td>Actions</td>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if(count($result_array) > 0): ?>
-                    <?php foreach($result_array as $product): ?>
-                        <tr>
-                            <td><?=$i++ ;?></td>
-                            <td><?=htmlspecialchars($product['code']) ;?></td>
-                            <td>
-                                <a href="detail.php?id=<?=urlencode($product['id']) ;?>">
-                                    <?=htmlspecialchars($product['name']) ;?>
-                                </a>
-                            </td>
-                            <td><?=htmlspecialchars($product['price']) ;?></td>
-                            <td><?=htmlspecialchars($product['catname']) ;?></td>
-                            <td><?=htmlspecialchars($product['unit']) ;?></td>
-                            <td><?=htmlspecialchars($product['low_stock']) ;?></td>
-                            <td><?=htmlspecialchars($product['onhand']);?></td>
-                            <td>
-                                <a href="edit.php?id=<?=urlencode($product['id']);?>" class="btn btn-success btn-sm">Edit</a>
-                                <a href="delete.php?id=<?=urlencode($product['id']);?>" class="btn btn-danger btn-sm"
-                                onclick="return confirm('You want to delete?')">Delete</a>
-                            </td>
-                        </tr>
-                    <?php endforeach ;?>
-                <?php endif ;?>
-            </tbody>
-        </table>
     </div>
-</body>
-<?php include('../includes/footer.php');
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4">លេខកូដ</th>
+                        <th>ឈ្មោះទំនិញ</th>
+                        <th>តម្លៃលក់ (USD/KHR)</th>
+                        <th>ចំនួនក្នុងស្តុក</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if(!empty($products)): ?>
+                        <?php foreach($products as $p): ?>
+                            <?php 
+                                // គណនាតម្លៃជារៀលអូតូ
+                                $price_khr = $p['price'] * $current_rate; 
+                            ?>
+                            <tr>
+                                <td class="ps-4">
+                                    <span class="badge bg-light text-primary border-0 font-monospace">
+                                        <?= htmlspecialchars($p['code']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark"><?= htmlspecialchars($p['name']) ?></div>
+                                    <div class="text-muted smaller"><?= htmlspecialchars($p['catname']) ?></div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">$<?= number_format($p['price'], 2) ?></div>
+                                    <div class="text-primary small"><?= number_format($price_khr) ?> ៛</div>
+                                </td>
+                                <td>
+                                    <span class="fs-6 fw-bold <?= ($p['onhand'] <= $p['low_stock']) ? 'text-danger' : '' ?>">
+                                        <?= $p['onhand'] ?>
+                                    </span> 
+                                    <small class="text-muted"><?= $p['unit'] ?></small>
+                                    <?php if($p['onhand'] <= $p['low_stock']): ?>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger ms-1 px-2">
+                                            <i class="fas fa-exclamation-triangle small"></i> ស្តុកទាប
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group shadow-sm rounded-2 overflow-hidden">
+                                        <a href="edit.php?id=<?= $p['id'] ?>" class="btn btn-sm btn-white text-success border-end">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="delete.php?id=<?= $p['id'] ?>" class="btn btn-sm btn-white text-danger"
+                                           onclick="return confirm('តើអ្នកចង់លុបទំនិញនេះមែនទេ?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="5" class="text-center py-5 text-muted">មិនមានទិន្នន័យទំនិញឡើយ។</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<?php include('../includes/footer.php'); ?>

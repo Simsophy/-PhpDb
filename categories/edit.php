@@ -1,83 +1,125 @@
 <?php 
     include('../config.php');
     include('../function.php');
-    $success = false;
-    $error = false;
-    $id = $_GET['id'];
+    session_start();
 
+    // 1. SECURITY FIX: Sanitize the ID from GET
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+    if ($id <= 0) {
+        $_SESSION['error'] = "Invalid category ID.";
+        header('Location: index.php');
+        exit;
+    }
+
+    // 2. HANDLE FORM SUBMISSION
     if(isset($_POST['btn'])){
-        $name = $_POST['name'];
-        $description = $_POST['description'];
-        $sql = "update categories set name = '$name', description = '$description' where id=$id ";
+        global $conn;
+        // SECURITY FIX: Sanitize inputs to prevent SQL Injection
+        $name = mysqli_real_escape_string($conn, $_POST['name']);
+        $description = mysqli_real_escape_string($conn, $_POST['description']);
+        
+        $sql = "UPDATE categories SET name = '$name', description = '$description' WHERE id = $id";
 
-        $x = non_query($sql);
-        if($x){
-            $success = true;
-        }else{
-            $error = true;
+        if(non_query($sql)){
+            $_SESSION['success'] = "Category updated successfully!";
+            header('Location: index.php'); // Redirect to list after success
+            exit;
+        } else {
+            $_SESSION['error'] = "Failed to update category.";
         }
     }
 
-    // read data for update
-    $name = "";
-    $description = "";
-    $sql1 = "select * from categories where id = $id";
+    // 3. READ DATA FOR UPDATE
+    $sql1 = "SELECT * FROM categories WHERE id = $id";
     $row = scalar_query($sql1);
-    $name = $row['name'];
-    $description = $row['description'];
+
+    if (!$row) {
+        $_SESSION['error'] = "Category not found.";
+        header('Location: index.php');
+        exit;
+    }
+
+    $name = htmlspecialchars($row['name'] ?? '');
+    $description = htmlspecialchars($row['description'] ?? '');
+
+    $title = "Edit Category";
+    include('../includes/header.php'); 
 ?>
 
-<?php include('../includes/header.php'); ?>
-<?php $title = "Edit"; ?>
-<div class="container">
-    
-    
-    <?php alert_success(); ?>
-    <?php alert_error(); ?> 
-<?php include('../includes/header.php'); ?>
-<body>
-    <div class="container">
-        <h3>Edit Categories</h3>
-        <p>
-            <a href="index.php" class = "btn btn-success btn-sm" >Back</a>
-        </p>    
-        <form action="" method="post">
-            <div class="row">
-                <div class="col-sm-6">
-                    <?php if($success): ?>
-                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                            <strong>Information</strong> Data has been saved successfully.
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    <?php endif; ?>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold text-dark m-0">Edit Category</h3>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb small m-0">
+                            <li class="breadcrumb-item"><a href="../admin.php">Admin</a></li>
+                            <li class="breadcrumb-item"><a href="index.php">Categories</a></li>
+                            <li class="breadcrumb-item active">Edit</li>
+                        </ol>
+                    </nav>
+                </div>
+                <a href="index.php" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+            </div>
 
-                    <?php if($error): ?>
-                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                            <strong>Information</strong> Fail to save data, please check again!
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    <?php endif; ?>
-                    
-                    <div class="form-group">
-                        <label for="name">Name
-                            <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" id="name" name="name" class="form-control" required autofocus value="<?=$name;?>">
-                    </div>
+            <?php alert_success(); alert_error(); ?>
 
-                    <div class="form-group mt-2">
-                        <label for="description">Description</label>
-                        <textarea name="description" id="description" class="form-control" rows="5" > <?=$description;?> </textarea>
-                    </div>
-                    
-                    <div class="form-group mt-3">
-                        <button class="btn btn-primary btn-sm" name="btn" >Save</button>
-                        <a href="index.php" class="btn btn-danger btn-sm" >Cancel</a>
-                    </div>
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <form action="" method="post">
+                        
+                        <div class="mb-4">
+                            <label for="name" class="form-label small fw-bold text-muted text-uppercase">
+                                Category Name <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-warning">
+                                    <i class="bi bi-tag-fill"></i>
+                                </span>
+                                <input type="text" id="name" name="name" 
+                                       class="form-control border-start-0 ps-0 shadow-none" 
+                                       required autofocus 
+                                       value="<?= $name; ?>"
+                                       placeholder="Enter category name">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="description" class="form-label small fw-bold text-muted text-uppercase">
+                                Description
+                            </label>
+                            <textarea name="description" id="description" 
+                                      class="form-control bg-light shadow-none" 
+                                      rows="4" 
+                                      placeholder="Provide details about this category..."><?= $description; ?></textarea>
+                        </div>
+
+                        <hr class="my-4 opacity-25">
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="btn" class="btn btn-primary px-4 rounded-3 w-100 shadow-sm">
+                                <i class="bi bi-check-circle me-2"></i>Save Changes
+                            </button>
+                            <a href="index.php" class="btn btn-light px-4 rounded-3 w-100 border text-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </form>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+
+            <p class="text-center mt-4 text-muted small">
+                <i class="bi bi-info-circle me-1"></i> 
+                Changes will be reflected immediately across all linked products.
+            </p>
+
+        </div>
     </div>
-</body>
+</div>
+
 <?php include('../includes/footer.php'); ?>
